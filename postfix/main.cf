@@ -1,0 +1,121 @@
+##
+# General
+##
+
+# Logging configuration
+maillog_file = /dev/stdout
+
+# Domain
+mydomain = {{ DOMAIN }}
+myhostname = {{ HOSTNAME }}
+myorigin = $mydomain
+
+# Queue location
+queue_directory = /queue
+
+# Size limit
+header_size_limit = {{ HEADER_SIZE_LIMIT }}
+message_size_limit = {{ MESSAGE_SIZE_LIMIT }}
+
+# Relayed networks
+mynetworks = 127.0.0.0/8 [::ffff:127.0.0.0]/104 [::1]/128 {{ SUBNET }} {{ RELAYNETS }}
+
+# Alias list (empty it)
+alias_maps = 
+
+# Only accept virtual emails
+mydestination = 
+
+# Relayhost if any is configured
+relayhost = {{ RELAYHOST }}
+
+# Sasl configuration
+smtpd_sasl_path = smtpd
+# smtpd_sasl_auth_enable = yes
+smtpd_sasl_security_options = noanonymous
+smtpd_sasl_local_domain = $myhostname
+
+# Recipient delimeter
+recipient_delimiter = {{ RECIPIENT_DELIMITER }}
+
+# Only the front server is allowed to perform xclient
+smtpd_authorized_xclient_hosts = {{ SUBNET }}
+
+# Greeting banner
+smtpd_banner = $myhostname ESMTP
+
+# Maximum number of recipients per message delivery
+smtpd_recipient_limit = 100
+
+# Disable VRFY command used in email harvesting
+disable_vrfy_command = yes
+
+##
+# TLS
+##
+
+# General TLS configuration
+tls_high_cipherlist = EDH+CAMELLIA:EDH+aRSA:EECDH+aRSA+AESGCM:EECDH+aRSA+SHA256:EECDH:+CAMELLIA128:+AES128:+SSLv3:!aNULL:!eNULL:!LOW:!3DES:!MD5:!EXP:!PSK:!DSS:!RC4:!SEED:!IDEA:!ECDSA:kEDH:CAMELLIA128-SHA:AES128-SHA
+tls_preempt_cipherlist = yes
+tls_ssl_options = NO_COMPRESSION
+
+# Outgoing TLS is more flexible because 1. not all receiving servers will
+# support TLS, 2. not all will have and up-to-date TLS stack.
+smtp_tls_security_level = may
+smtp_tls_mandatory_protocols = !SSLv2, !SSLv3
+smtp_tls_protocols =!SSLv2,!SSLv3
+smtp_tls_session_cache_database = btree:${data_directory}/smtp_scache
+
+##
+# Virtual
+##
+
+# The alias map actually returns both aliases and local mailboxes, which is
+# required for reject_unlisted_sender to work properly
+virtual_alias_domains =
+virtual_alias_maps = hash:/etc/postfix/virtual_alias
+virtual_mailbox_domains = {{ DOMAIN }}
+virtual_mailbox_maps = hash:/etc/postfix/virtual_mailbox
+
+##
+# Restrictions
+##
+
+# Delay all rejects until all information can be logged
+smtpd_delay_reject = yes
+
+# Allowed senders are: the user or one of the alias destinations
+smtpd_sender_login_maps = $virtual_alias_maps
+
+# Restrictions for incoming SMTP, other restrictions are applied in master.cf
+smtpd_helo_required = yes
+
+smtpd_client_restrictions =
+  permit_mynetworks,
+  reject_non_fqdn_sender,
+  reject_unknown_sender_domain,
+  reject_unknown_recipient_domain,
+  reject_unverified_recipient,
+  permit
+
+smtpd_relay_restrictions =
+  permit_mynetworks,
+  permit_sasl_authenticated,
+  reject_unauth_destination
+
+smtpd_sender_restrictions =
+  permit_mynetworks,
+  reject_non_fqdn_sender,
+  reject_unknown_sender_domain,
+  reject_unlisted_sender,
+  reject_sender_login_mismatch,
+  permit
+
+smtpd_recipient_restrictions =
+  reject_unauth_pipelining,
+  reject_non_fqdn_recipient,
+   reject_unknown_recipient_domain,
+   permit_mynetworks,
+   permit
+
+unverified_recipient_reject_reason = Address lookup failure

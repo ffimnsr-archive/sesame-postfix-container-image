@@ -1,0 +1,10 @@
+version: '3'
+
+services:
+    smtp:
+        build:
+            context: .
+        image: sesame-postfix
+        container_name: sesame-postfix-server
+        restart: always
+        env_file: ./.env
