@@ -1,8 +1,10 @@
 # Sesame Postfix Docker
 
+TODO: still in progress.
+
 Here is a sample `.env` file.
 
-`` bash
+``` bash
 # Main mail domain
 DOMAIN=sample.com
 
@@ -27,4 +29,17 @@ RECIPIENT_DELIMITER=+
 
 DELIVERY_USER=poster
 DELIVERY_PASSWORD=poster
+```
+
+Testing it using `telnet` with the pattern bellow.
+
+``` bash
+EHLO sample.com
+AUTH LOGIN <base64-encoded-user>
+<base64-encoded-pass>
+DATA
+Subject: Test Email
+This is a test mail
+.
+QUIT
 ```
